@@ -335,3 +335,100 @@ function setupAccordion() {
         });
     });
 }
+
+// Función para actualizar un reporte existente
+function updateReport(reportId, codigoEstudiante, nombre, descripcion) {
+    // Crear objeto con datos actualizados
+    const reportData = {
+        codigoEstudiante: parseInt(codigoEstudiante),
+        nombre: nombre || null,
+        descripcion: descripcion
+    };
+    
+    // Enviar datos actualizados a la API
+    fetch(`http://localhost:8000/tasks/${reportId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error al actualizar el reporte');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Reporte actualizado con éxito:', data);
+        
+        // Mostrar mensaje de éxito
+        document.getElementById('exitoEnvio').textContent = 'Reporte actualizado con éxito';
+        
+        // Resetear ID activo
+        activeReportId = null;
+        
+        // Limpiar formulario
+        document.getElementById('reportForm').reset();
+        
+        // Recargar lista de reportes
+        loadReports();
+        
+        // Cerrar modal después de 2 segundos
+        setTimeout(function() {
+            document.getElementById('report-modal').style.display = 'none';
+            document.getElementById('exitoEnvio').textContent = '';
+        }, 2000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('exitoEnvio').textContent = 'Error al actualizar el reporte. Inténtalo de nuevo.';
+        document.getElementById('exitoEnvio').style.color = 'var(--error-color)';
+    });
+}// Gestión de reportes - Integración con API
+function submitReport(codigoEstudiante, nombre, descripcion) {
+    // Crear objeto de reporte
+    const reportData = {
+        codigoEstudiante: parseInt(codigoEstudiante), // Convertir a entero para la API
+        nombre: nombre || null,
+        descripcion: descripcion
+    };
+    
+    // Enviar datos a la API
+    fetch('http://localhost:8000/tasks/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error al enviar el reporte');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Reporte enviado con éxito:', data);
+        
+        // Mostrar mensaje de éxito
+        document.getElementById('exitoEnvio').textContent = 'Reporte enviado con éxito';
+        
+        // Limpiar formulario
+        document.getElementById('reportForm').reset();
+        
+        // Recargar lista de reportes
+        loadReports();
+        
+        // Cerrar modal después de 2 segundos
+        setTimeout(function() {
+            document.getElementById('report-modal').style.display = 'none';
+            document.getElementById('exitoEnvio').textContent = '';
+        }, 2000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('exitoEnvio').textContent = 'Error al enviar el reporte. Inténtalo de nuevo.';
+        document.getElementById('exitoEnvio').style.color = 'var(--error-color)';
+    });
+}
