@@ -14,14 +14,12 @@ function generateReportId() {
 
 // Listeners de eventos cuando el DOM está cargado
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicialización de elementos
     loadReports();
     setupNavigationEvents();
     setupModalEvents();
     setupFormEvents();
     setupAccordion();
-    
-    // Verificar si hay un hash en la URL para navegación directa
+
     if (window.location.hash) {
         const sectionId = window.location.hash.substring(1);
         switchSection(sectionId);
@@ -30,267 +28,269 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Gestión de la navegación
 function setupNavigationEvents() {
-    // Toggle del menú lateral
     const menuToggle = document.querySelector('.menu-toggle');
     const sidebar = document.querySelector('.sidebar');
-    
+
     menuToggle.addEventListener('click', function() {
         sidebar.classList.toggle('active');
     });
-    
-    // Enlaces de navegación
+
     const navLinks = document.querySelectorAll('.nav-menu a');
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const sectionId = this.getAttribute('href').substring(1);
             switchSection(sectionId);
-            
-            // Cerrar menú en móvil después de clic
+
             if (window.innerWidth <= 768) {
                 sidebar.classList.remove('active');
             }
-            
-            // Actualizar URL con hash
+
             window.location.hash = sectionId;
         });
     });
 
-    // Botón de ayuda
     const helpButton = document.getElementById('help-button');
     const helpModal = document.getElementById('help-modal');
     const closeHelpModal = document.querySelector('.close-help-modal');
-    
+
     helpButton.addEventListener('click', function(e) {
         e.preventDefault();
         helpModal.style.display = 'block';
     });
-    
+
     closeHelpModal.addEventListener('click', function() {
         helpModal.style.display = 'none';
     });
 }
 
 function switchSection(sectionId) {
-    // Desactivar sección actual
-    document.querySelector('.section.active-section').classList.remove('active-section');
-    
-    // Activar nueva sección
+    const activeSectionEl = document.querySelector('.section.active-section');
+    if (activeSectionEl) activeSectionEl.classList.remove('active-section');
+
     document.getElementById(sectionId).classList.add('active-section');
-    
-    // Actualizar enlaces activos
-    document.querySelector('.nav-menu a.active').classList.remove('active');
-    document.querySelector(`.nav-menu a[href="#${sectionId}"]`).classList.add('active');
-    
-    // Actualizar sección activa
+
+    const currentActiveLink = document.querySelector('.nav-menu a.active');
+    if (currentActiveLink) currentActiveLink.classList.remove('active');
+
+    const newActiveLink = document.querySelector(`.nav-menu a[href="#${sectionId}"]`);
+    if (newActiveLink) newActiveLink.classList.add('active');
+
     activeSection = sectionId;
 }
 
-// Gestión de modales
 function setupModalEvents() {
-    // Modal de reportes
     const panicButton = document.getElementById('panic-button');
     const reportModal = document.getElementById('report-modal');
     const closeModal = document.querySelector('.close-modal');
-    
+
     panicButton.addEventListener('click', function() {
         reportModal.style.display = 'block';
     });
-    
+
     closeModal.addEventListener('click', function() {
         reportModal.style.display = 'none';
     });
-    
-    // Modal de cancelación
+
     const cancelConfirmationModal = document.getElementById('cancel-confirmation-modal');
     const confirmCancel = document.getElementById('confirm-cancel');
     const abortCancel = document.getElementById('abort-cancel');
-    
+
     confirmCancel.addEventListener('click', function() {
-        if (activeReportId) {
-            cancelReport(activeReportId);
-        }
+        if (activeReportId) cancelReport(activeReportId);
         cancelConfirmationModal.style.display = 'none';
     });
-    
+
     abortCancel.addEventListener('click', function() {
         cancelConfirmationModal.style.display = 'none';
     });
-    
-    // Cerrar modales al hacer clic fuera
+
     window.addEventListener('click', function(e) {
-        if (e.target === reportModal) {
-            reportModal.style.display = 'none';
-        }
-        if (e.target === cancelConfirmationModal) {
-            cancelConfirmationModal.style.display = 'none';
-        }
-        if (e.target === helpModal) {
-            helpModal.style.display = 'none';
-        }
+        if (e.target === reportModal) reportModal.style.display = 'none';
+        if (e.target === cancelConfirmationModal) cancelConfirmationModal.style.display = 'none';
+        if (e.target === helpModal) helpModal.style.display = 'none';
     });
 }
 
-// Gestión de formularios
 function setupFormEvents() {
-    // Formulario de reporte
     const reportForm = document.getElementById('reportForm');
-    
+
     reportForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const codigoEstudiante = document.getElementById('codigoEstudiante').value;
         const nombre = document.getElementById('nombre').value;
         const descripcion = document.getElementById('descripcion').value;
-        
-        // Validación
+
         let isValid = true;
-        
-        if (!codigoEstudiante) {
-            document.getElementById('errorCodigo').textContent = 'El código de estudiante es obligatorio';
+
+        if (!codigoEstudiante || isNaN(codigoEstudiante)) {
+            document.getElementById('errorCodigo').textContent = 'Código de estudiante inválido';
             isValid = false;
         } else {
             document.getElementById('errorCodigo').textContent = '';
         }
-        
+
         if (!descripcion) {
             document.getElementById('errorDescripcion').textContent = 'La descripción es obligatoria';
             isValid = false;
         } else {
             document.getElementById('errorDescripcion').textContent = '';
         }
-        
+
         if (isValid) {
-            submitReport(codigoEstudiante, nombre, descripcion);
+            if (activeReportId) {
+                updateReport(activeReportId, codigoEstudiante, nombre, descripcion);
+            } else {
+                submitReport(codigoEstudiante, nombre, descripcion);
+            }
         }
     });
-    
-    // Formulario de contacto
+
     const contactForm = document.getElementById('contactForm');
-    
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Simular envío exitoso
             document.getElementById('contactExito').textContent = 'Mensaje enviado con éxito';
             contactForm.reset();
-            
-            // Limpiar mensaje después de 3 segundos
-            setTimeout(function() {
-                document.getElementById('contactExito').textContent = '';
-            }, 3000);
+            setTimeout(() => document.getElementById('contactExito').textContent = '', 3000);
         });
     }
 }
 
-// Gestión de reportes
 function submitReport(codigoEstudiante, nombre, descripcion) {
-    // Crear objeto de reporte
-    const report = {
-        id: generateReportId(),
+    const reportData = {
         codigoEstudiante: codigoEstudiante,
-        nombre: nombre || 'Anónimo',
-        descripcion: descripcion,
-        fecha: new Date(),
-        estado: 'Pendiente'
+        nombre: nombre || null,
+        descripcion: descripcion
     };
-    
-    // Obtener reportes existentes
-    let reports = JSON.parse(localStorage.getItem('reports')) || [];
-    
-    // Añadir nuevo reporte
-    reports.push(report);
-    
-    // Guardar en localStorage
-    localStorage.setItem('reports', JSON.stringify(reports));
-    
-    // Mostrar mensaje de éxito
-    document.getElementById('exitoEnvio').textContent = 'Reporte enviado con éxito';
-    
-    // Limpiar formulario
-    document.getElementById('reportForm').reset();
-    
-    // Recargar lista de reportes
-    loadReports();
-    
-    // Cerrar modal después de 2 segundos
-    setTimeout(function() {
-        document.getElementById('report-modal').style.display = 'none';
-        document.getElementById('exitoEnvio').textContent = '';
-    }, 2000);
+
+    fetch('http://localhost:8000/tasks/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reportData)
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Error al enviar el reporte');
+        return response.json();
+    })
+    .then(() => {
+        document.getElementById('exitoEnvio').textContent = 'Reporte enviado con éxito';
+        document.getElementById('reportForm').reset();
+        loadReports();
+        setTimeout(() => {
+            document.getElementById('report-modal').style.display = 'none';
+            document.getElementById('exitoEnvio').textContent = '';
+        }, 2000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('exitoEnvio').textContent = 'Error al enviar el reporte. Inténtalo de nuevo.';
+    });
+}
+
+function updateReport(reportId, codigoEstudiante, nombre, descripcion) {
+    const reportData = {
+        codigoEstudiante: parseInt(codigoEstudiante),
+        nombre: nombre || null,
+        descripcion: descripcion
+    };
+
+    fetch(`http://localhost:8000/tasks/${reportId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reportData)
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Error al actualizar el reporte');
+        return response.json();
+    })
+    .then(() => {
+        document.getElementById('exitoEnvio').textContent = 'Reporte actualizado con éxito';
+        activeReportId = null;
+        document.getElementById('reportForm').reset();
+        loadReports();
+        setTimeout(() => {
+            document.getElementById('report-modal').style.display = 'none';
+            document.getElementById('exitoEnvio').textContent = '';
+        }, 2000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('exitoEnvio').textContent = 'Error al actualizar el reporte.';
+    });
 }
 
 function loadReports() {
     const reportsContainer = document.getElementById('reports-list');
-    const reports = JSON.parse(localStorage.getItem('reports')) || [];
-    
-    // Ordenar reportes por fecha (más reciente primero)
-    reports.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-    
-    // Limpiar contenedor
-    reportsContainer.innerHTML = '';
-    
-    if (reports.length === 0) {
-        reportsContainer.innerHTML = '<p>No hay reportes pendientes</p>';
-        return;
-    }
-    
-    // Mostrar reportes
-    reports.forEach(report => {
-        const reportElement = document.createElement('div');
-        reportElement.className = 'report-item';
-        reportElement.innerHTML = `
-            <div class="report-header">
-                <span class="report-id">${report.id}</span>
-                <span class="report-date-time">${formatDate(report.fecha)}</span>
-            </div>
-            <div class="report-description">${report.descripcion}</div>
-            <div class="report-status">Estado: ${report.estado}</div>
-            <div class="report-actions">
-                <button class="action-button form-button" data-id="${report.id}">Formulario</button>
-                <button class="action-button cancel-button" data-id="${report.id}">Cancelar Reporte</button>
-            </div>
-        `;
-        
-        reportsContainer.appendChild(reportElement);
-    });
-    
-    // Añadir eventos a los botones
-    const formButtons = document.querySelectorAll('.form-button');
-    const cancelButtons = document.querySelectorAll('.cancel-button');
-    
-    formButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const reportId = this.getAttribute('data-id');
-            editReport(reportId);
+
+    fetch('http://localhost:8000/tasks/')
+    .then(response => {
+        if (!response.ok) throw new Error('Error al obtener reportes');
+        return response.json();
+    })
+    .then(reports => {
+        reports.sort((a, b) => new Date(b.fecha || b.created_at) - new Date(a.fecha || a.created_at));
+        reportsContainer.innerHTML = '';
+
+        if (reports.length === 0) {
+            reportsContainer.innerHTML = '<p>No hay reportes pendientes</p>';
+            return;
+        }
+
+        reports.forEach(report => {
+            const reportElement = document.createElement('div');
+            reportElement.className = 'report-item';
+            reportElement.innerHTML = `
+                <div class="report-header">
+                    <span class="report-id">${report.id}</span>
+                    <span class="report-date-time">${formatDate(report.fecha_creacion || report.created_at)}</span>
+                </div>
+                <div class="report-description">${report.descripcion}</div>
+                <div class="report-status">Estado: ${report.estado || 'Pendiente'}</div>
+                <div class="report-actions">
+                    <button class="action-button form-button" data-id="${report.id}">Formulario</button>
+                    <button class="action-button cancel-button" data-id="${report.id}">Cancelar Reporte</button>
+                </div>
+            `;
+
+            reportsContainer.appendChild(reportElement);
         });
-    });
-    
-    cancelButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const reportId = this.getAttribute('data-id');
-            confirmCancelReport(reportId);
+
+        document.querySelectorAll('.form-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const reportId = this.getAttribute('data-id');
+                editReport(reportId);
+            });
         });
+
+        document.querySelectorAll('.cancel-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const reportId = this.getAttribute('data-id');
+                confirmCancelReport(reportId);
+            });
+        });
+    })
+    .catch(error => {
+        console.error('Error al cargar los reportes:', error);
+        reportsContainer.innerHTML = '<p>Error al cargar los reportes</p>';
     });
 }
 
 function editReport(reportId) {
-    const reports = JSON.parse(localStorage.getItem('reports')) || [];
-    const report = reports.find(r => r.id === reportId);
-    
-    if (report) {
-        // Llenar formulario con datos del reporte
+    fetch(`http://localhost:8000/tasks/${reportId}`)
+    .then(response => {
+        if (!response.ok) throw new Error('No se pudo obtener el reporte');
+        return response.json();
+    })
+    .then(report => {
         document.getElementById('codigoEstudiante').value = report.codigoEstudiante;
-        document.getElementById('nombre').value = report.nombre !== 'Anónimo' ? report.nombre : '';
+        document.getElementById('nombre').value = report.nombre || '';
         document.getElementById('descripcion').value = report.descripcion;
-        
-        // Guardar ID de reporte activo para actualización
         activeReportId = reportId;
-        
-        // Mostrar modal
         document.getElementById('report-modal').style.display = 'block';
-    }
+    })
+    .catch(error => console.error('Error al cargar el reporte:', error));
 }
 
 function confirmCancelReport(reportId) {
@@ -299,136 +299,36 @@ function confirmCancelReport(reportId) {
 }
 
 function cancelReport(reportId) {
-    let reports = JSON.parse(localStorage.getItem('reports')) || [];
-    
-    // Encontrar índice del reporte
-    const index = reports.findIndex(r => r.id === reportId);
-    
-    if (index !== -1) {
-        // Actualizar estado a cancelado
-        reports[index].estado = 'Cancelado';
-        
-        // Guardar cambios
-        localStorage.setItem('reports', JSON.stringify(reports));
-        
-        // Recargar reportes
+    fetch(`http://localhost:8000/tasks/${reportId}`)
+    .then(response => response.json())
+    .then(task => {
+        task.estado = "Cancelado";
+
+        return fetch(`http://localhost:8000/tasks/${reportId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(task)
+        });
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Error al cancelar el reporte");
+        return response.json();
+    })
+    .then(() => {
         loadReports();
-    }
+        switchSection("home");
+    })
+    .catch(error => console.error("Error:", error));
 }
 
-// Funcionalidad del acordeón para preguntas frecuentes
 function setupAccordion() {
     const accordionHeaders = document.querySelectorAll('.accordion-header');
-    
+
     accordionHeaders.forEach(header => {
         header.addEventListener('click', function() {
-            // Toggle clase activa
             this.classList.toggle('active');
-            
-            // Toggle contenido del acordeón
             const content = this.nextElementSibling;
-            if (content.style.maxHeight) {
-                content.style.maxHeight = null;
-            } else {
-                content.style.maxHeight = content.scrollHeight + "px";
-            }
+            content.style.maxHeight = content.style.maxHeight ? null : content.scrollHeight + "px";
         });
-    });
-}
-
-// Función para actualizar un reporte existente
-function updateReport(reportId, codigoEstudiante, nombre, descripcion) {
-    // Crear objeto con datos actualizados
-    const reportData = {
-        codigoEstudiante: parseInt(codigoEstudiante),
-        nombre: nombre || null,
-        descripcion: descripcion
-    };
-    
-    // Enviar datos actualizados a la API
-    fetch(`http://localhost:8000/tasks/${reportId}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reportData)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Error al actualizar el reporte');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Reporte actualizado con éxito:', data);
-        
-        // Mostrar mensaje de éxito
-        document.getElementById('exitoEnvio').textContent = 'Reporte actualizado con éxito';
-        
-        // Resetear ID activo
-        activeReportId = null;
-        
-        // Limpiar formulario
-        document.getElementById('reportForm').reset();
-        
-        // Recargar lista de reportes
-        loadReports();
-        
-        // Cerrar modal después de 2 segundos
-        setTimeout(function() {
-            document.getElementById('report-modal').style.display = 'none';
-            document.getElementById('exitoEnvio').textContent = '';
-        }, 2000);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('exitoEnvio').textContent = 'Error al actualizar el reporte. Inténtalo de nuevo.';
-        document.getElementById('exitoEnvio').style.color = 'var(--error-color)';
-    });
-}// Gestión de reportes - Integración con API
-function submitReport(codigoEstudiante, nombre, descripcion) {
-    // Crear objeto de reporte
-    const reportData = {
-        codigoEstudiante: parseInt(codigoEstudiante), // Convertir a entero para la API
-        nombre: nombre || null,
-        descripcion: descripcion
-    };
-    
-    // Enviar datos a la API
-    fetch('http://localhost:8000/tasks/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reportData)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Error al enviar el reporte');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Reporte enviado con éxito:', data);
-        
-        // Mostrar mensaje de éxito
-        document.getElementById('exitoEnvio').textContent = 'Reporte enviado con éxito';
-        
-        // Limpiar formulario
-        document.getElementById('reportForm').reset();
-        
-        // Recargar lista de reportes
-        loadReports();
-        
-        // Cerrar modal después de 2 segundos
-        setTimeout(function() {
-            document.getElementById('report-modal').style.display = 'none';
-            document.getElementById('exitoEnvio').textContent = '';
-        }, 2000);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('exitoEnvio').textContent = 'Error al enviar el reporte. Inténtalo de nuevo.';
-        document.getElementById('exitoEnvio').style.color = 'var(--error-color)';
     });
 }
