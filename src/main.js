@@ -3,10 +3,13 @@ let activeSection = "home";
 let activeReportId = null;
 
 // Funciones de utilidad
-function formatDate(date) {
-    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return new Date(date).toLocaleDateString('es-ES', options);
+function formatDate(fecha) {
+    return fecha || 'Fecha no disponible';
 }
+
+
+
+
 
 function generateReportId() {
     return 'REP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
@@ -191,7 +194,7 @@ function submitReport(codigoEstudiante, nombre, descripcion) {
 
 function updateReport(reportId, codigoEstudiante, nombre, descripcion) {
     const reportData = {
-        codigoEstudiante: parseInt(codigoEstudiante),
+        codigoEstudiante: codigoEstudiante,
         nombre: nombre || null,
         descripcion: descripcion
     };
@@ -244,7 +247,7 @@ function loadReports() {
             reportElement.innerHTML = `
                 <div class="report-header">
                     <span class="report-id">${report.id}</span>
-                    <span class="report-date-time">${formatDate(report.fecha_creacion || report.created_at)}</span>
+                    <span class="report-date-time">${formatDate(report.fecha)} ${report.hora || ''}</span>
                 </div>
                 <div class="report-description">${report.descripcion}</div>
                 <div class="report-status">Estado: ${report.estado || 'Pendiente'}</div>
