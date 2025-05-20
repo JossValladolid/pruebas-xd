@@ -7,10 +7,6 @@ function formatDate(fecha) {
     return fecha || 'Fecha no disponible';
 }
 
-
-
-
-
 function generateReportId() {
     return 'REP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 }
@@ -243,31 +239,44 @@ function loadReports() {
 
         reports.forEach(report => {
             const reportElement = document.createElement('div');
-            reportElement.className = 'report-item';
+            const isCanceled = report.estado === 'Cancelado';
+            
+            // Agregar clase CSS según el estado
+            reportElement.className = isCanceled ? 'report-item canceled-report' : 'report-item';
+            
             reportElement.innerHTML = `
                 <div class="report-header">
-                    <span class="report-id">${report.id}</span>
+                    <span class="report-id">ID: ${report.id}</span>
                     <span class="report-date-time">${formatDate(report.fecha)} ${report.hora || ''}</span>
                 </div>
                 <div class="report-description">${report.descripcion}</div>
                 <div class="report-status">Estado: ${report.estado || 'Pendiente'}</div>
                 <div class="report-actions">
-                    <button class="action-button form-button" data-id="${report.id}">Formulario</button>
-                    <button class="action-button cancel-button" data-id="${report.id}">Cancelar Reporte</button>
+                    <button class="action-button form-button ${isCanceled ? 'disabled' : ''}" 
+                            data-id="${report.id}" 
+                            ${isCanceled ? 'disabled' : ''}>
+                        Formulario
+                    </button>
+                    <button class="action-button cancel-button ${isCanceled ? 'disabled' : ''}" 
+                            data-id="${report.id}" 
+                            ${isCanceled ? 'disabled' : ''}>
+                        ${isCanceled ? 'Reporte Cancelado' : 'Cancelar Reporte'}
+                    </button>
                 </div>
             `;
 
             reportsContainer.appendChild(reportElement);
         });
 
-        document.querySelectorAll('.form-button').forEach(button => {
+        // Solo agregar event listeners a botones no deshabilitados
+        document.querySelectorAll('.form-button:not(.disabled)').forEach(button => {
             button.addEventListener('click', function() {
                 const reportId = this.getAttribute('data-id');
                 editReport(reportId);
             });
         });
 
-        document.querySelectorAll('.cancel-button').forEach(button => {
+        document.querySelectorAll('.cancel-button:not(.disabled)').forEach(button => {
             button.addEventListener('click', function() {
                 const reportId = this.getAttribute('data-id');
                 confirmCancelReport(reportId);
@@ -318,6 +327,7 @@ function cancelReport(reportId) {
         return response.json();
     })
     .then(() => {
+        activeReportId = null; 
         loadReports();
         switchSection("home");
     })
