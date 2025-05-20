@@ -246,7 +246,7 @@ function loadReports() {
             
             reportElement.innerHTML = `
                 <div class="report-header">
-                    <span class="report-id">ID: ${report.id}</span>
+                    <span class="report-id">${report.id}</span>
                     <span class="report-date-time">${formatDate(report.fecha)} ${report.hora || ''}</span>
                 </div>
                 <div class="report-description">${report.descripcion}</div>
@@ -260,7 +260,7 @@ function loadReports() {
                     <button class="action-button cancel-button ${isCanceled ? 'disabled' : ''}" 
                             data-id="${report.id}" 
                             ${isCanceled ? 'disabled' : ''}>
-                        ${isCanceled ? 'Reporte Cancelado' : 'Cancelar Reporte'}
+                        ${isCanceled ? 'Cancelado' : 'Cancelar Reporte'}
                     </button>
                 </div>
             `;
